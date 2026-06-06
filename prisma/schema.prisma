@@ -1,0 +1,84 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Client {
+  id              String   @id @default(cuid())
+  name            String
+  email           String?
+  phone           String?
+  cpf             String?  @unique
+  birthDate       DateTime?
+  address         String?
+  city            String?
+  state           String?
+
+  // Perfil investidor
+  investorProfile String   @default("Moderado") // Conservador, Moderado, Arrojado, Agressivo
+  patrimony       Float?   // Patrimônio total declarado
+  monthlyIncome   Float?
+
+  // Relacionamento
+  relationship    String   @default("Ativo") // Ativo, Inativo, Prospecto
+  notes           String?
+
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  attendances     Attendance[]
+  portfolioItems  PortfolioItem[]
+  tasks           Task[]
+}
+
+model Attendance {
+  id          String   @id @default(cuid())
+  clientId    String
+  client      Client   @relation(fields: [clientId], references: [id], onDelete: Cascade)
+
+  date        DateTime @default(now())
+  type        String   // Reunião, Ligação, Email, WhatsApp, Presencial
+  subject     String
+  description String?
+  outcome     String?  // resultado/próximos passos
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model PortfolioItem {
+  id          String   @id @default(cuid())
+  clientId    String
+  client      Client   @relation(fields: [clientId], references: [id], onDelete: Cascade)
+
+  product     String   // Nome do produto
+  category    String   // Renda Fixa, Renda Variável, FII, Fundos, Tesouro, Cripto, etc
+  value       Float    // Valor aplicado
+  targetAlloc Float?   // Alocação alvo (%)
+  currentAlloc Float?  // Alocação atual (%)
+  institution String?  // Instituição/corretora
+  notes       String?
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Task {
+  id          String   @id @default(cuid())
+  clientId    String?
+  client      Client?  @relation(fields: [clientId], references: [id], onDelete: SetNull)
+
+  title       String
+  description String?
+  dueDate     DateTime?
+  priority    String   @default("Média") // Alta, Média, Baixa
+  status      String   @default("Pendente") // Pendente, Em andamento, Concluída, Cancelada
+  category    String   @default("Geral") // Follow-up, Reunião, Proposta, Revisão, Geral
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
